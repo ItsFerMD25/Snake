@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Snake 🐍</title>
+<style>
+  body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    color: #e0e0e0;
+    text-align: center;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 20px;
+    user-select: none;
+  }
+  h1 {
+    font-size: 3em;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px #6fcf97;
+  }
+  canvas {
+    background: #111c22;
+    display: block;
+    margin: 20px auto;
+    border-radius: 15px;
+    border: 4px solid #6fcf97;
+    box-shadow: 0 0 15px #6fcf97aa;
+  }
+  #score {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #6fcf97;
+    margin: 10px 0 0 0;
+  }
+  #instructions {
+    font-size: 1em;
+    margin: 10px 0 20px 0;
+    color: #a0b0b9;
+  }
+  #gameOverMessage {
+    font-size: 2.5em;
+    color: #ef5350;
+    margin: 20px 0;
+    display: none;
+    animation: pulse 1.5s infinite alternate;
+  }
+  @keyframes pulse {
+    0% { text-shadow: 0 0 10px #ef5350cc; }
+    100% { text-shadow: 0 0 30px #ef5350ff; }
+  }
+  #restartBtn {
+    display: none;
+    background: #6fcf97;
+    border: none;
+    color: #111;
+    font-size: 1.2em;
+    padding: 10px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    box-shadow: 0 5px 10px #4aa86b;
+    transition: background 0.3s ease;
+  }
+  #restartBtn:hover {
+    background: #54a55c;
+  }
+</style>
+</head>
+<body>
+
+<h1>Snake 🐍</h1>
+<canvas id="game" width="400" height="400"></canvas>
+<div>Puntaje: <span id="score">0</span></div>
+<div id="instructions">Usa las flechas del teclado para mover la serpiente</div>
+<div id="gameOverMessage">¡Juego terminado!</div>
+<button id="restartBtn">Reiniciar</button>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const scale = 20;
+const rows = canvas.height / scale;
+const cols = canvas.width / scale;
+
+let snake = [{x: 10, y: 10}];
+let dx = 0;
+let dy = 0;
+let fruit = getRandomPosition();
+let score = 0;
+let gameOver = false;
+
+function getRandomPosition() {
+  return {
+    x: Math.floor(Math.random() * cols),
+    y: Math.floor(Math.random() * rows)
+  };
+}
+
+function drawRect(x, y, color) {
+  ctx.fillStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 8;
+  ctx.fillRect(x * scale, y * scale, scale, scale);
+  ctx.shadowBlur = 0; // reset shadow
+}
+
+function clear() {
+  ctx.fillStyle = '#111c22';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function draw() {
+  clear();
+
+  drawRect(fruit.x, fruit.y, '#ef5350');
+
+  for (let part of snake) {
+    drawRect(part.x, part.y, '#6fcf97');
+  }
+}
+
+function moveSnake() {
+  if(gameOver) return;
+  if(dx === 0 && dy === 0) return;
+
+  const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+  if(head.x < 0 || head.x >= cols || head.y < 0 || head.y >= rows) {
+    endGame();
+    return;
+  }
+
+  for(let part of snake) {
+    if(part.x === head.x && part.y === head.y) {
+      endGame();
+      return;
+    }
+  }
+
+  snake.unshift(head);
+
+  if(head.x === fruit.x && head.y === fruit.y) {
+    score++;
+    document.getElementById('score').textContent = score;
+    fruit = getRandomPosition();
+  } else {
+    snake.pop();
+  }
+}
+
+function endGame() {
+  gameOver = true;
+  document.getElementById('gameOverMessage').style.display = 'block';
+  document.getElementById('restartBtn').style.display = 'inline-block';
+}
+
+function resetGame() {
+  snake = [{x: 10, y: 10}];
+  dx = 0;
+  dy = 0;
+  score = 0;
+  gameOver = false;
+  document.getElementById('score').textContent = score;
+  fruit = getRandomPosition();
+  document.getElementById('gameOverMessage').style.display = 'none';
+  document.getElementById('restartBtn').style.display = 'none';
+}
+
+window.addEventListener('keydown', e => {
+  if(gameOver) return;
+  switch(e.key) {
+    case 'ArrowUp':
+      if(dy === 1) break;
+      dx = 0;
+      dy = -1;
+      break;
+    case 'ArrowDown':
+      if(dy === -1) break;
+      dx = 0;
+      dy = 1;
+      break;
+    case 'ArrowLeft':
+      if(dx === 1) break;
+      dx = -1;
+      dy = 0;
+      break;
+    case 'ArrowRight':
+      if(dx === -1) break;
+      dx = 1;
+      dy = 0;
+      break;
+  }
+});
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  resetGame();
+});
+
+function gameLoop() {
+  moveSnake();
+  draw();
+}
+
+setInterval(gameLoop, 150);
+</script>
+
+</body>
+</html>
